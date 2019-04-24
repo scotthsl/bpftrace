@@ -311,7 +311,8 @@ void SemanticAnalyser::visit(Call &call)
       call.type = SizedType(Type::usym, 16);
   }
   else if (call.func == "ntop") {
-    check_nargs(call, 2);
+    if (!check_nargs(call, 2))
+      return;
     check_arg(call, Type::integer, 0);
     // check_arg(call, Type::integer, 1);
     auto &arg = *call.vargs->at(1);

@@ -275,7 +275,7 @@ TEST(semantic_analyser, call_ntop)
   test("kprobe:f { @x = ntop(2, arg0); }", 0);
   test("kprobe:f { @x = ntop(2, 0xFFFF); }", 0);
   test("kprobe:f { ntop(); }", 1);
-  test("kprobe:f { ntop(2, \"hello\"); }", 10);
+  test("kprobe:f { ntop(2, \"hello\"); }", 1);
 }
 
 TEST(semantic_analyser, call_kaddr)
