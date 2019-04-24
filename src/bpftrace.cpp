@@ -421,7 +421,7 @@ std::vector<std::unique_ptr<IPrintable>> BPFtrace::get_arg_values(const std::vec
           std::make_unique<PrintableString>(
             resolve_inet(
               *reinterpret_cast<uint64_t*>(arg_data+arg.offset),
-              *reinterpret_cast<uint64_t*>(arg_data+arg.offset+8))));
+              reinterpret_cast<uint8_t*>(arg_data+arg.offset+8))));
         break;
       case Type::username:
         arg_values.push_back(
@@ -911,7 +911,7 @@ int BPFtrace::print_map(IMap &map, uint32_t top, uint32_t div)
     else if (map.type_.type == Type::usym)
       std::cout << resolve_usym(*(uintptr_t*)value.data(), *(uint64_t*)(value.data() + 8));
     else if (map.type_.type == Type::inet)
-      std::cout << resolve_inet(*(uintptr_t*)value.data(), *(uint64_t*)(value.data() + 8));
+      std::cout << resolve_inet(*(uintptr_t*)value.data(), (uint8_t*)(value.data() + 8));
     else if (map.type_.type == Type::username)
       std::cout << resolve_uid(*(uint64_t*)(value.data())) << std::endl;
     else if (map.type_.type == Type::string)
@@ -1615,17 +1615,17 @@ uint64_t BPFtrace::read_address_from_output(std::string output)
   return std::stoull(first_word, 0, 16);
 }
 
-std::string BPFtrace::resolve_inet(int af, uint64_t inet)
+std::string BPFtrace::resolve_inet(int af, uint8_t* inet)
 {
 
-  // FIXME ipv6 is a 128 bit type as an array, how to pass as argument?
-  if(af != AF_INET)
+  if(af != AF_INET && af != AF_INET6)
   {
-    std::cerr << "ntop() currently only supports AF_INET (IPv4); IPv6 will be supported in the future." << std::endl;
+    std::cerr << "ntop() got unsupported AF type: " << af << std::endl;
     return std::string("");
   }
-  char addr_cstr[INET_ADDRSTRLEN];
-  inet_ntop(af, &inet, addr_cstr, INET_ADDRSTRLEN);
+  char addr_cstr[INET6_ADDRSTRLEN];
+  // TODO(mmarchini): handle errors
+  inet_ntop(af, inet, addr_cstr, INET6_ADDRSTRLEN);
   std::string addrstr(addr_cstr);
   return addrstr;
 }
